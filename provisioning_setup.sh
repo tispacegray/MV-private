@@ -249,12 +249,12 @@ function provisioning_get_civitai_files() {
     for entry in "${files[@]}"; do
         local url="${entry%%|*}"
         local filename="${entry##*|}"
-        local auth_header=""
-        if [[ -n "$CIVITAI_TOKEN" ]]; then
-            auth_header="--header=Authorization: Bearer $CIVITAI_TOKEN"
-        fi
         echo "→ $filename"
-        wget $auth_header -nc --show-progress -O "${dir}/${filename}" "$url" || echo "[!] Download failed: $filename"
+        if [[ -n "$CIVITAI_TOKEN" ]]; then
+            wget --header="Authorization: Bearer $CIVITAI_TOKEN" -nc --show-progress -O "${dir}/${filename}" "$url" || echo "[!] Download failed: $filename"
+        else
+            wget -nc --show-progress -O "${dir}/${filename}" "$url" || echo "[!] Download failed: $filename"
+        fi
     done
 }
 
@@ -277,7 +277,7 @@ function provisioning_get_private_assets() {
 
     # Ultralytics bbox models
     mkdir -p "${COMFYUI_DIR}/models/ultralytics/bbox"
-    echo "→ ultralytics/bbox (22 files)..."
+    echo "→ ultralytics/bbox..."
     python3 - <<EOF
 import os, requests
 headers = {"Authorization": f"Bearer ${HF_TOKEN}"}
@@ -299,34 +299,39 @@ for path in files:
     print(f"  ✅ Done: {fname}")
 EOF
 
-    # ComfyUI_INSTARAW node
-    if [[ ! -d "${COMFYUI_DIR}/custom_nodes/ComfyUI_INSTARAW" ]]; then
-        echo "→ ComfyUI_INSTARAW node..."
+    # ComfyUI_INSTARAW node — recursive download
+    if [[ ! -f "${COMFYUI_DIR}/custom_nodes/ComfyUI_INSTARAW/nodes/__init__.py" ]] && \
+       [[ ! -f "${COMFYUI_DIR}/custom_nodes/ComfyUI_INSTARAW/nodes/image_processing.py" ]]; then
+        echo "→ ComfyUI_INSTARAW node (recursive)..."
         mkdir -p "${COMFYUI_DIR}/custom_nodes/ComfyUI_INSTARAW"
         python3 - <<EOF
 import os, requests
-headers = {"Authorization": f"Bearer ${HF_TOKEN}"}
-api = "https://huggingface.co/api/datasets/${PRIVATE_HF_REPO}/tree/main/ComfyUI_INSTARAW"
-r = requests.get(api, headers=headers)
 
-def download_tree(items, base_path):
-    for item in items:
+headers = {"Authorization": f"Bearer ${HF_TOKEN}"}
+REPO = "${PRIVATE_HF_REPO}"
+LOCAL_BASE = "${COMFYUI_DIR}/custom_nodes/ComfyUI_INSTARAW"
+
+def download_recursive(hf_path, local_base):
+    url = f"https://huggingface.co/api/datasets/{REPO}/tree/main/{hf_path}"
+    r = requests.get(url, headers=headers)
+    for item in r.json():
         if item["type"] == "file":
-            path = item["path"]
-            fname = os.path.basename(path)
-            rel = os.path.relpath(path, "ComfyUI_INSTARAW")
-            dest = os.path.join(base_path, rel)
+            rel = os.path.relpath(item["path"], "ComfyUI_INSTARAW")
+            dest = os.path.join(local_base, rel)
             os.makedirs(os.path.dirname(dest), exist_ok=True)
             if os.path.exists(dest):
                 continue
-            url = f"https://huggingface.co/datasets/${PRIVATE_HF_REPO}/resolve/main/{path}"
-            resp = requests.get(url, headers=headers, stream=True)
+            file_url = f"https://huggingface.co/datasets/{REPO}/resolve/main/{item['path']}"
+            resp = requests.get(file_url, headers=headers, stream=True)
             with open(dest, "wb") as f:
                 for chunk in resp.iter_content(chunk_size=8192):
                     f.write(chunk)
             print(f"  ✅ {rel}")
+        elif item["type"] == "directory":
+            download_recursive(item["path"], local_base)
 
-download_tree(r.json(), "${COMFYUI_DIR}/custom_nodes/ComfyUI_INSTARAW")
+download_recursive("ComfyUI_INSTARAW", LOCAL_BASE)
+print("INSTARAW download complete!")
 EOF
     else
         echo "  ✅ ComfyUI_INSTARAW already exists, skipping"
