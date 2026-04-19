@@ -229,12 +229,11 @@ function provisioning_get_files() {
     echo "Downloading ${#files[@]} file(s) → $dir..."
 
     for url in "${files[@]}"; do
-        local auth_header=""
         if [[ -n "$HF_TOKEN" && "$url" =~ huggingface\.co ]]; then
-            auth_header="--header=Authorization: Bearer $HF_TOKEN"
+            wget --header="Authorization: Bearer $HF_TOKEN" -nc --content-disposition --show-progress -e dotbytes=4M -P "$dir" "$url" || echo "[!] Download failed: $url"
+        else
+            wget -nc --content-disposition --show-progress -e dotbytes=4M -P "$dir" "$url" || echo "[!] Download failed: $url"
         fi
-        echo "→ $url"
-        wget $auth_header -nc --content-disposition --show-progress -e dotbytes=4M -P "$dir" "$url" || echo "[!] Download failed: $url"
     done
 }
 
