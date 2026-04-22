@@ -18,7 +18,7 @@ APT_PACKAGES=(
 
 PIP_PACKAGES=(
     "lpips"
-    "mediapipe==0.10.21"
+    "mediapipe==0.10.14"
 )
 
 # ============================================
