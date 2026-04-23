@@ -174,7 +174,7 @@ function provisioning_start() {
     if [[ ! -f "${COMFYUI_DIR}/models/loras/Wan/2.2/Wan2.2Lenovo.safetensors" ]]; then
         echo "→ Wan2.2Lenovo.safetensors"
         wget --header="Authorization: Bearer $HF_TOKEN" \
-            "https://huggingface.co/TheRaf7/ultra-real-wan2.2/resolve/main/Lenovo(1).safetensors" \
+            "https://huggingface.co/Danrisi/LenovoWan/resolve/main/Lenovo.safetensors" \
             -O "${COMFYUI_DIR}/models/loras/Wan/2.2/Wan2.2Lenovo.safetensors" \
             && echo "  ✅ Done: Wan2.2Lenovo.safetensors" \
             || echo "[!] Download failed: Wan2.2Lenovo.safetensors"
