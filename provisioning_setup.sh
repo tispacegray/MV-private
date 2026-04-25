@@ -23,7 +23,7 @@ APT_PACKAGES=(
 
 PIP_PACKAGES=(
     "lpips"
-    "mediapipe==0.10.14"
+    "mediapipe"
 )
 
 # ============================================
@@ -500,8 +500,8 @@ function provisioning_verify() {
 
     echo ""
     echo "📦 Package versions:"
-    python3 -c "import lpips; print(f'  lpips: {lpips.__version__}')" 2>/dev/null || echo "  lpips: not found"
-    python3 -c "import mediapipe; print(f'  mediapipe: {mediapipe.__version__}')" 2>/dev/null || echo "  mediapipe: not found"
+    /venv/main/bin/python3 -c "import lpips; print(f'  lpips: {lpips.__version__}')" 2>/dev/null || echo "  lpips: not found"
+    /venv/main/bin/python3 -c "import mediapipe; print(f'  mediapipe: {mediapipe.__version__}')" 2>/dev/null || echo "  mediapipe: not found"
     exiftool -ver 2>/dev/null | xargs -I{} echo "  exiftool: {}" || echo "  exiftool: not found"
 
     echo ""
