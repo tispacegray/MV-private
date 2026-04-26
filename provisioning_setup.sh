@@ -19,7 +19,6 @@ echo "=== Log: $LOG_FILE ==="
 
 APT_PACKAGES=(
     "exiftool"
-    "aria2"
 )
 
 PIP_PACKAGES=(
@@ -174,11 +173,11 @@ function provisioning_start() {
     mkdir -p "${COMFYUI_DIR}/models/loras/Wan/2.2"
     if [[ ! -f "${COMFYUI_DIR}/models/loras/Wan/2.2/Wan2.2Lenovo.safetensors" ]]; then
         echo "→ Wan2.2Lenovo.safetensors"
-        aria2c_download \
+        wget --header="Authorization: Bearer $HF_TOKEN" \
             "https://huggingface.co/Danrisi/LenovoWan/resolve/main/Lenovo.safetensors" \
-            "${COMFYUI_DIR}/models/loras/Wan/2.2" \
-            "Wan2.2Lenovo.safetensors" \
-            "$HF_TOKEN"
+            -O "${COMFYUI_DIR}/models/loras/Wan/2.2/Wan2.2Lenovo.safetensors" \
+            && echo "  ✅ Done: Wan2.2Lenovo.safetensors" \
+            || echo "[!] Download failed: Wan2.2Lenovo.safetensors"
     else
         echo "  ✅ Already exists: Wan2.2Lenovo.safetensors"
     fi
@@ -253,37 +252,6 @@ function provisioning_get_nodes() {
     done
 }
 
-# aria2c base downloader — 8 connections per file, shows progress
-function aria2c_download() {
-    local url="$1"
-    local dir="$2"
-    local out="$3"   # optional explicit filename
-    local token="$4" # optional auth token
-
-    local args=(
-        --max-connection-per-server=8
-        --split=8
-        --min-split-size=10M
-        --dir="$dir"
-        --continue=true
-        --summary-interval=3
-        --console-log-level=warn
-        --download-result=full
-    )
-
-    if [[ -n "$token" ]]; then
-        args+=(--header="Authorization: Bearer $token")
-    fi
-
-    if [[ -n "$out" ]]; then
-        args+=(--out="$out")
-    else
-        args+=(--content-disposition=true)
-    fi
-
-    aria2c "${args[@]}" "$url" && echo "  ✅ Done" || echo "[!] Download failed: $url"
-}
-
 # Download files — filename taken from server (content-disposition)
 function provisioning_get_files() {
     if [[ $# -lt 2 ]]; then return; fi
@@ -295,13 +263,11 @@ function provisioning_get_files() {
     echo "Downloading ${#files[@]} file(s) → $dir..."
 
     for url in "${files[@]}"; do
-        local fname
-        fname=$(basename "$url")
-        echo "→ $fname"
+        echo "→ $(basename "$url")"
         if [[ -n "$HF_TOKEN" && "$url" =~ huggingface\.co ]]; then
-            aria2c_download "$url" "$dir" "" "$HF_TOKEN"
+            wget --header="Authorization: Bearer $HF_TOKEN" -nc --content-disposition --show-progress -e dotbytes=4M -P "$dir" "$url" || echo "[!] Download failed: $url"
         else
-            aria2c_download "$url" "$dir" "" ""
+            wget -nc --content-disposition --show-progress -e dotbytes=4M -P "$dir" "$url" || echo "[!] Download failed: $url"
         fi
     done
 }
@@ -326,9 +292,11 @@ function provisioning_get_named_files() {
             continue
         fi
         if [[ -n "$HF_TOKEN" && "$url" =~ huggingface\.co ]]; then
-            aria2c_download "$url" "$dir" "$filename" "$HF_TOKEN"
+            wget --header="Authorization: Bearer $HF_TOKEN" --show-progress -O "$dest" "$url" \
+                && echo "  ✅ Done" || echo "[!] Download failed: $filename"
         else
-            aria2c_download "$url" "$dir" "$filename" ""
+            wget --show-progress -O "$dest" "$url" \
+                && echo "  ✅ Done" || echo "[!] Download failed: $filename"
         fi
     done
 }
@@ -352,9 +320,11 @@ function provisioning_get_civitai_files() {
             continue
         fi
         if [[ -n "$CIVITAI_TOKEN" ]]; then
-            aria2c_download "$url" "$dir" "$filename" "$CIVITAI_TOKEN"
+            wget --header="Authorization: Bearer $CIVITAI_TOKEN" --show-progress -O "$dest" "$url" \
+                && echo "  ✅ Done" || echo "[!] Download failed: $filename"
         else
-            aria2c_download "$url" "$dir" "$filename" ""
+            wget --show-progress -O "$dest" "$url" \
+                && echo "  ✅ Done" || echo "[!] Download failed: $filename"
         fi
     done
 }
@@ -371,11 +341,10 @@ function provisioning_get_private_assets() {
     mkdir -p "${COMFYUI_DIR}/models/loras"
     if [[ ! -f "${COMFYUI_DIR}/models/loras/detailed_nipples.safetensors" ]]; then
         echo "→ detailed_nipples.safetensors"
-        aria2c_download \
+        wget --header="Authorization: Bearer $HF_TOKEN" --show-progress \
             "https://huggingface.co/datasets/${PRIVATE_HF_REPO}/resolve/main/loras/detailed_nipples.safetensors" \
-            "${COMFYUI_DIR}/models/loras" \
-            "detailed_nipples.safetensors" \
-            "$HF_TOKEN"
+            -O "${COMFYUI_DIR}/models/loras/detailed_nipples.safetensors" \
+            && echo "  ✅ Done" || echo "[!] Failed: detailed_nipples"
     else
         echo "  ✅ Already exists: detailed_nipples.safetensors"
     fi
@@ -531,8 +500,8 @@ function provisioning_verify() {
 
     echo ""
     echo "📦 Package versions:"
-    python3 -c "import lpips; print(f'  lpips: {lpips.__version__}')" 2>/dev/null || echo "  lpips: not found"
-    python3 -c "import mediapipe; print(f'  mediapipe: {mediapipe.__version__}')" 2>/dev/null || echo "  mediapipe: not found"
+    /venv/main/bin/python3 -c "import lpips; print(f'  lpips: {lpips.__version__}')" 2>/dev/null || echo "  lpips: not found"
+    /venv/main/bin/python3 -c "import mediapipe; print(f'  mediapipe: {mediapipe.__version__}')" 2>/dev/null || echo "  mediapipe: not found"
     exiftool -ver 2>/dev/null | xargs -I{} echo "  exiftool: {}" || echo "  exiftool: not found"
 
     echo ""
