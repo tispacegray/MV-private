@@ -228,8 +228,7 @@ function provisioning_patch_mediapipe() {
         echo "  ✅ mediapipe patch already applied, skipping"
         return
     fi
-
-print("  ✅ mediapipe patch applied")
+done
 }
 
 function provisioning_install_base_reqs() {
