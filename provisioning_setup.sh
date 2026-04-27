@@ -32,7 +32,7 @@ PIP_PACKAGES=(
 
 NODES=(
     "https://github.com/ltdrdata/ComfyUI-Manager"
-    "https://github.com/Fannovel16/comfyui_controlnet_aux"
+    "https://github.com/tispacegray/comfyui_controlnet_aux"
     "https://github.com/ltdrdata/ComfyUI-Impact-Pack"
     "https://github.com/rgthree/rgthree-comfy"
     "https://github.com/ssitu/ComfyUI_UltimateSDUpscale"
@@ -131,6 +131,7 @@ function provisioning_start() {
     provisioning_get_apt_packages
     provisioning_install_base_reqs
     provisioning_get_nodes
+    provisioning_patch_mediapipe
     provisioning_get_pip_packages
 
     provisioning_get_files \
@@ -200,6 +201,35 @@ function provisioning_start() {
     echo ""
     echo "✅ Setup complete → Starting ComfyUI..."
     echo ""
+}
+
+function provisioning_patch_mediapipe() {
+    echo "Patching comfyui_controlnet_aux for mediapipe 0.10.x compatibility..."
+ 
+    local FILE="${COMFYUI_DIR}/custom_nodes/comfyui_controlnet_aux/src/custom_controlnet_aux/mediapipe_face/mediapipe_face_common.py"
+ 
+    if [[ ! -f "$FILE" ]]; then
+        echo "⚠️  mediapipe_face_common.py not found, skipping patch"
+        return
+    fi
+ 
+    # Download face_landmarker.task if not found
+    if [[ ! -f "${COMFYUI_DIR}/face_landmarker.task" ]]; then
+        echo "→ Downloading face_landmarker.task..."
+        wget -q -O "${COMFYUI_DIR}/face_landmarker.task" \
+            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task" \
+            && echo "  ✅ face_landmarker.task" || echo "  [!] Failed to download face_landmarker.task"
+    else
+        echo "  ✅ face_landmarker.task already exists"
+    fi
+ 
+    # retry
+    if grep -q "_LandmarkStub" "$FILE"; then
+        echo "  ✅ mediapipe patch already applied, skipping"
+        return
+    fi
+
+print("  ✅ mediapipe patch applied")
 }
 
 function provisioning_install_base_reqs() {
