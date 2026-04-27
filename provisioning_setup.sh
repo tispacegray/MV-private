@@ -528,6 +528,10 @@ function provisioning_verify() {
     done
 
     echo ""
+    echo "📁 face_landmarker.task"
+    check_file "${COMFYUI_DIR}/face_landmarker.task" "face_landmarker.task"
+
+    echo ""
     echo "📦 Package versions:"
     /venv/main/bin/python3 -c "import lpips; print(f'  lpips: {lpips.__version__}')" 2>/dev/null || echo "  lpips: not found"
     /venv/main/bin/python3 -c "import mediapipe; print(f'  mediapipe: {mediapipe.__version__}')" 2>/dev/null || echo "  mediapipe: not found"
