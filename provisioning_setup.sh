@@ -114,7 +114,7 @@ CONTROLNET_MODELS=(
 # ============================================
 # PRIVATE ASSETS (HuggingFace private dataset)
 # ============================================
-PRIVATE_HF_REPO="RockyBeerboa/mv-private-assets"
+PRIVATE_HF_REPO="TIspace-gray/mv-private-assets"
 
 ### ─────────────────────────────────────────────
 ### DO NOT EDIT BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
