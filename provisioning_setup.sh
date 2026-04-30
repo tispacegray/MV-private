@@ -111,10 +111,19 @@ CONTROLNET_MODELS=(
     "https://huggingface.co/xinsir/controlnet-union-sdxl-1.0/resolve/main/diffusion_pytorch_model_promax.safetensors"
 )
 
+# Clip Vision for IPAdapter — url|filename format (server returns generic "model.safetensors")
+CLIP_VISION_MODELS=(
+    "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors|CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+)
+
+IPADAPTER_MODELS=(
+    "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors"
+)
+
 # ============================================
 # PRIVATE ASSETS (HuggingFace private dataset)
 # ============================================
-PRIVATE_HF_REPO="TIspace-gray/mv-private-assets"
+PRIVATE_HF_REPO="RockyBeerboa/mv-private-assets"
 
 ### ─────────────────────────────────────────────
 ### DO NOT EDIT BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
@@ -191,6 +200,16 @@ function provisioning_start() {
     provisioning_get_files \
         "${COMFYUI_DIR}/models/controlnet/SDXL/controlnet-union-sdxl-1.0" \
         "${CONTROLNET_MODELS[@]}"
+
+    # Clip Vision for IPAdapter (named: server returns generic model.safetensors)
+    provisioning_get_named_files \
+        "${COMFYUI_DIR}/models/clip_vision" \
+        "${CLIP_VISION_MODELS[@]}"
+
+    # IPAdapter weights (PLUS FACE for SDXL portraits)
+    provisioning_get_files \
+        "${COMFYUI_DIR}/models/ipadapter" \
+        "${IPADAPTER_MODELS[@]}"
 
     provisioning_get_private_assets
 
@@ -515,6 +534,14 @@ function provisioning_verify() {
     echo ""
     echo "📁 ControlNet:"
     check_file "${COMFYUI_DIR}/models/controlnet/SDXL/controlnet-union-sdxl-1.0/diffusion_pytorch_model_promax.safetensors" "ControlNet Union SDXL Promax"
+
+    echo ""
+    echo "📁 Clip Vision:"
+    check_file "${COMFYUI_DIR}/models/clip_vision/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors" "CLIP ViT-H-14 (IPAdapter SDXL)"
+
+    echo ""
+    echo "📁 IPAdapter:"
+    check_file "${COMFYUI_DIR}/models/ipadapter/ip-adapter-plus-face_sdxl_vit-h.safetensors" "IPAdapter PLUS FACE SDXL"
 
     echo ""
     echo "📁 Custom Nodes:"
