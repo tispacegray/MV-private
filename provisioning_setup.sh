@@ -69,8 +69,10 @@ DIFFUSION_MODELS=(
     "https://huggingface.co/Comfy-Org/flux1-kontext-dev_ComfyUI/resolve/main/split_files/diffusion_models/flux1-dev-kontext_fp8_scaled.safetensors"
 )
 
-CHECKPOINTS=(
-    "https://huggingface.co/Kutches/XL/resolve/main/lustifySDXLNSFW_ggwpV7.safetensors"
+CHECKPOINTS=()
+
+CHECKPOINTS_CIVITAI=(
+    "https://civitai.com/api/download/models/290640?type=Model&format=SafeTensor|lustifySDXLNSFW_ggwpV7.safetensors"
 )
 
 TEXT_ENCODERS=(
@@ -149,7 +151,7 @@ function provisioning_start() {
 
     provisioning_get_files \
         "${COMFYUI_DIR}/models/checkpoints/SDXL" \
-        "${CHECKPOINTS[@]}"
+        "${CHECKPOINTS_CIVITAI[@]}"
 
     provisioning_get_files \
         "${COMFYUI_DIR}/models/text_encoders" \
