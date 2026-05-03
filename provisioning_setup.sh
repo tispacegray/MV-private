@@ -72,7 +72,7 @@ DIFFUSION_MODELS=(
 CHECKPOINTS=()
 
 CHECKPOINTS_CIVITAI=(
-    "https://civitai.com/api/download/models/290640?type=Model&format=SafeTensor|lustifySDXLNSFW_ggwpV7.safetensors"
+    "https://civitai.red/api/download/models/2155386?type=Model&format=SafeTensor&size=pruned&fp=fp16|lustifySDXLNSFW_ggwpV7.safetensors"
 )
 
 TEXT_ENCODERS=(
