@@ -149,7 +149,7 @@ function provisioning_start() {
         "${COMFYUI_DIR}/models/diffusion_models" \
         "${DIFFUSION_MODELS[@]}"
 
-    provisioning_get_files \
+    provisioning_get_civitai_files \
         "${COMFYUI_DIR}/models/checkpoints/SDXL" \
         "${CHECKPOINTS_CIVITAI[@]}"
 
