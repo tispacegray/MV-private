@@ -369,11 +369,16 @@ function provisioning_get_civitai_files() {
             continue
         fi
         if [[ -n "$CIVITAI_TOKEN" ]]; then
-            wget --header="Authorization: Bearer $CIVITAI_TOKEN" --show-progress -O "$dest" "$url" \
-                && echo "  ✅ Done" || echo "[!] Download failed: $filename"
+            # curl drops Authorization on cross-domain redirects by default (correct behaviour:
+            # auth goes to civitai only, NOT to the Cloudflare R2 CDN redirect)
+            curl -L --progress-bar --fail \
+                -H "Authorization: Bearer $CIVITAI_TOKEN" \
+                -o "$dest" "$url" \
+                && echo "  ✅ Done" || { rm -f "$dest"; echo "[!] Download failed: $filename"; }
         else
-            wget --show-progress -O "$dest" "$url" \
-                && echo "  ✅ Done" || echo "[!] Download failed: $filename"
+            curl -L --progress-bar --fail \
+                -o "$dest" "$url" \
+                && echo "  ✅ Done" || { rm -f "$dest"; echo "[!] Download failed: $filename"; }
         fi
     done
 }
